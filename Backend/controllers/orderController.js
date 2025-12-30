@@ -5,32 +5,32 @@ import userModel from "../models/userModel.js";
 // PLACE ORDER — CASH ON DELIVERY
 // ================================
 const placeOrder = async (req, res) => {
-    try {
-        
-        const {userId, items, amount, address } = req.body;
+  try {
+    const { items, amount, address } = req.body;
 
-        const orderData = new orderModel({
-            userId,
-            items,
-            amount,
-            address,
-            paymentMethod: "COD",
-            payment: false,
-            date: Date.now()
-        });
-        const newOrder = new orderModel(orderData)
-        await orderData.save();
+    const order = new orderModel({
+      userId: req.userId,      // 🔥 from token, not body
+      items,
+      amount,
+      address,
+      paymentMethod: "COD",
+      payment: false,
+      date: Date.now()
+    });
 
-        // vider le panier après commande
-        await userModel.findByIdAndUpdate(userId, { cartData: {} });
+    await order.save();
 
-        res.json({ success: true, message: "Order placed successfully" });
+    // 🧹 clear user cart
+    await userModel.findByIdAndUpdate(req.userId, { cartData: {} });
 
-    } catch (error) {
-        console.log("PLACE ORDER ERROR:", error);
-        res.json({ success: false, message: error.message });
-    }
+    res.json({ success: true, message: "Order placed successfully" });
+
+  } catch (error) {
+    console.log("PLACE ORDER ERROR:", error);
+    res.json({ success: false, message: error.message });
+  }
 };
+
 
 // ================================
 // PLACE ORDER — STRIPE
